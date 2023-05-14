@@ -139,7 +139,18 @@ class Fbi:
     # Dump output to a specified file      
     # supports downloading data in text and PDF
     def dump(self):
-        if 'txt' in args.dump.lower():
+        if 'pdf' in args.dump.lower():
+            if args.wanted_person:
+                print(self.download(self.response))
+            else:
+                current_directory = os.getcwd()
+                final_directory = os.path.join(current_directory, os.path.splitext(args.dump)[0])
+                if not os.path.exists(final_directory):
+                    os.makedirs(final_directory)
+                for item in self.response:
+                    print(self.download(item,dir=final_directory))
+                exit()
+        else:
             if args.wanted_person:
                 with open(args.dump, 'w', encoding='utf-8') as file:
                     file.write(f"{self.response['title']}\n")
@@ -162,17 +173,6 @@ class Fbi:
                         file.write(f'\n\n{"*"*100}\n')
                     file.close()
                     exit()
-        elif 'pdf' in args.dump.lower():
-            if args.wanted_person:
-                print(self.download(self.response))
-            else:
-                current_directory = os.getcwd()
-                final_directory = os.path.join(current_directory, os.path.splitext(args.dump)[0])
-                if not os.path.exists(final_directory):
-                    os.makedirs(final_directory)
-                for item in self.response:
-                    print(self.download(item,dir=final_directory))
-                exit()
 
         if args.verbose:
             print(f'\n{white}[{green}✓{white}] Output dumped to {args.dump}{reset}')
@@ -246,7 +246,7 @@ class Fbi:
 start_time = datetime.now()
 # Parsing command line arguments                                                                        
 parser = argparse.ArgumentParser(description=f'{white}FBI Wanted Persons Program CLI{reset}',epilog=f'{white}Gets lists and dossiers of top wanted persons and unidentified victims from the FBI Wanted Persons Program. Developed by {green}Richard Mwewa{white} | https://about.me/{green}rly0nheart{reset}')
-parser.add_argument('--dump',help='dump output to a file',metavar='<path/to/file>')
+parser.add_argument('--dump',help='dump output to a specified file, behaves differently for pdf',metavar='<path/to/file>')
 parser.add_argument('--wanted',help='return a list of the top wanted persons\' dossiers',action='store_true')
 parser.add_argument('--records',help='number of records to fetch with --wanted, DEFAULT = 10 records',dest='records',metavar='<number>')
 parser.add_argument('--wanted-person',help='return a dossier of a single wanted person; provide person\'s ID#',dest='wanted_person',metavar='<ID#>')
