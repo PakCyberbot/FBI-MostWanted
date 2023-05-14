@@ -27,6 +27,7 @@ $ pip install -r requirements.txt
 | <code>--wanted-person</code>| *ID#* |  *return a dossier of a wanted person*  |
 | <code>--images</code>| |  *download images seperately in a folder. FileName Format: ***name+number+caption****  |
 | <code>--download</code>| |  *download a person's casefile (beta) (only works with --wanted-person)*  |
+| <code>--reward</code>| | *Filter out records that contain a reward*  |
 | <code>--verbose</code>| | *enable verbosity*  |
 | <code>--version</code>| |  *show program's version number and exit*  |
 | <code>--author</code>| |  *show author's information and exit*  |
@@ -37,6 +38,7 @@ $ pip install -r requirements.txt
 * If you provide a **dump file with a PDF extension, the tool will automatically enter download mode and proceed to download the PDF files** of all wanted individuals. The downloaded files will be saved in the directory with the same name as the provided dump file.
 * You can now fetch any **desired number of records from the wanted list using the "--records" option**.
 * Additionally, you have the capability to **download each image file separately using --images**. The downloaded image files will be stored in the "wanted-images" directory for OSINT purposes.
+* By including the "--reward" option, **you can easily filter out records that include a reward**. If you specify the "--records" parameter along with it, be aware that the filter will be applied to the available entries, potentially resulting in a count lower than the specified "--records" value.
 
 # LICENSE
 ![license](https://user-images.githubusercontent.com/74001397/137917929-2f2cdb0c-4d1d-4e4b-9f0d-e01589e027b5.png)

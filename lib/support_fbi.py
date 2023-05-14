@@ -90,6 +90,10 @@ class Fbi:
     # Getting list and information of top wanted persons        
     def wanted(self):
         for item in self.response:
+            # reward filter
+            if args.reward:
+                if not self.reward(item):
+                    continue
             print(f"\n{white}{item['title']}{reset}")
             for attr in self.attrs:
                 print(f'{white}├─ {self.attr_dict[attr]}: {green}{item[attr]}{reset}')
@@ -119,6 +123,11 @@ class Fbi:
 
     # Getting information of a wanted person, given their uid/ID            
     def wanted_person(self):
+        # reward filter
+        if args.reward:
+            if not self.reward(response):
+                print(f"{white}[{green}X{white}] No reward Here{reset}")
+                return None
         print(f"\n{white}{self.response['title']}{reset}")
         for attr in self.attrs:
             print(f'{white}├─ {self.attr_dict[attr]}: {green}{self.response[attr]}{reset}')
@@ -164,6 +173,10 @@ class Fbi:
             else:
                 with open(args.dump, 'a', encoding='utf-8') as file:
                     for item in self.response:
+                         # reward filter
+                        if args.reward:
+                            if not self.reward(item):
+                                continue
                         file.write(f"\n\n{item['title']}\n")
                         for attr in self.attrs:
                             file.write(f'├─ {self.attr_dict[attr]}: {item[attr]}\n')
@@ -180,6 +193,10 @@ class Fbi:
         
     # Download casefile of a wanted person                              
     def download(self, response, dir='./'):
+        # reward filter
+        if args.reward:
+            if not self.reward(response):
+                return f"{white}[{green}X{white}] No reward Here{reset}"
         uri = requests.get(response['files'][0]['url'], stream=True)
         # name extraction from URL to avoid file naming errors
         file_name = re.sub(r"http.+/([^/]+)/.+.pdf",r'\1',response['files'][0]['url'])
@@ -195,6 +212,10 @@ class Fbi:
     
     # Download images for each person in a seperate folder
     def images(self, response):
+        # reward filter
+        if args.reward:
+            if not self.reward(response):
+                return f"{white}[{green}X{white}] No reward Here{reset}"
         # creating directory
         current_directory = os.getcwd()
         final_directory = os.path.join(current_directory, "wanted_images")
@@ -225,6 +246,12 @@ class Fbi:
                 
         return f"{white}[{green}✓{white}] Images saved with the name {file_name}-<number>__<caption>{reset}"
 
+    def reward(self, item):
+        if item['reward_text'] == None:
+            return False
+        else:
+            return True
+    
     # Open and read the LICENSE file     
     def licence_license(self):
         with open('./LICENSE','r') as file:
@@ -246,15 +273,16 @@ class Fbi:
 start_time = datetime.now()
 # Parsing command line arguments                                                                        
 parser = argparse.ArgumentParser(description=f'{white}FBI Wanted Persons Program CLI{reset}',epilog=f'{white}Gets lists and dossiers of top wanted persons and unidentified victims from the FBI Wanted Persons Program. Developed by {green}Richard Mwewa{white} | https://about.me/{green}rly0nheart{reset}')
-parser.add_argument('--dump',help='dump output to a specified file, behaves differently for pdf',metavar='<path/to/file>')
-parser.add_argument('--wanted',help='return a list of the top wanted persons\' dossiers',action='store_true')
-parser.add_argument('--records',help='number of records to fetch with --wanted, DEFAULT = 10 records',dest='records',metavar='<number>')
-parser.add_argument('--wanted-person',help='return a dossier of a single wanted person; provide person\'s ID#',dest='wanted_person',metavar='<ID#>')
-parser.add_argument('--images',help='download images seperately in a folder. FileName Format: name+number+caption',action='store_true')
-parser.add_argument('--download',help='download persons\' casefile (beta)',action='store_true')
-parser.add_argument('--verbose',help='enable verbosity',action='store_true')
-parser.add_argument('--version',version='v1.0.0-caesar',action='version')
-parser.add_argument('--author',help='show author\'s information and exit',action='store_true')
+parser.add_argument('--dump','-d',help='dump output to a specified file, behaves differently for pdf',metavar='<path/to/file>')
+parser.add_argument('--wanted','-w',help='return a list of the top wanted persons\' dossiers',action='store_true')
+parser.add_argument('--records','-e',help='number of records to fetch with --wanted, DEFAULT = 10 records',dest='records',metavar='<number>')
+parser.add_argument('--wanted-person','-p',help='return a dossier of a single wanted person; provide person\'s ID#',dest='wanted_person',metavar='<ID#>')
+parser.add_argument('--images','-i',help='download images seperately in a folder. FileName Format: name+number+caption',action='store_true')
+parser.add_argument('--download','-g',help='download persons\' casefile (beta)',action='store_true')
+parser.add_argument('--reward','-r',help='Filter out records that contain a reward',action='store_true')
+parser.add_argument('--verbose','-v',help='enable verbosity',action='store_true')
+parser.add_argument('--version',version='v1.2.0-caesar',action='version')
+parser.add_argument('--author','-a',help='show author\'s information and exit',action='store_true')
 parser.add_argument('--licence','--license',help='show program\'s licen[cs]e and exit',action='store_true')
 
 args = parser.parse_args()
