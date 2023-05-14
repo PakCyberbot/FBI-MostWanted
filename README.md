@@ -1,6 +1,7 @@
-## CURRENTLY WORKING ON IT !
+# FBI-MostWanted Python tool
 An open-source tool that gets information on the FBI Wanted program, this includes lists of wanted criminals, unidentified victims, etc. 
 
+This tool is an enhanced version of the previous one written by @rly0nheart. Thanks to him for making my work more easier by creating fbi-api handling python library.
 
 # Installation
 ```
@@ -20,7 +21,9 @@ $ pip install -r requirements.txt
 | -------------|:---------:|:---------:|
 | <code>--dump</code>| *path/to/file* |  *dump output to a specified file*  |
 | <code>--wanted</code>| |  *return dossiers of the current wanted persons*  |
+| <code>--records</code>| *number* |  *number of records to fetch with --wanted, DEFAULT=10*  |
 | <code>--wanted-person</code>| *ID#* |  *return a dossier of a wanted person*  |
+| <code>--images</code>| |  *download images seperately in a folder. FileName Format: ***name+number+caption****  |
 | <code>--download</code>| |  *download a person's casefile (beta) (only works with --wanted-person)*  |
 | <code>--verbose</code>| | *enable verbosity*  |
 | <code>--version</code>| |  *show program's version number and exit*  |

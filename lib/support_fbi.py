@@ -6,7 +6,7 @@ from tqdm import tqdm
 import logging
 from datetime import datetime
 import os
-from lib.colors import red,white,green,reset
+from lib.colors import red,white,green,reset,blue
 
 
 class Fbi:
@@ -93,25 +93,42 @@ class Fbi:
             print(f"\n{white}{item['title']}{reset}")
             for attr in self.attrs:
                 print(f'{white}├─ {self.attr_dict[attr]}: {green}{item[attr]}{reset}')
+            #printing file_name for finding image or pdf
+            file_name = re.sub(r"http.+/([^/]+)/.+.pdf",r'\1',item['files'][0]['url'])
+            print(f'{blue}├─ FileName: {file_name}{reset}')
+            # records seperator
+            print(f'\n\n{"*"*100}\n')
+
+        # Storing images seperately
+        if args.images:
+            for item in self.response:
+                print(self.images(item))
+        # Dumping output to a file; invoked with --dump
+        if args.dump:
+            self.dump()
+        elif args.download:
+            current_directory = os.getcwd()
+            final_directory = os.path.join(current_directory, "wanted_list")
+            if not os.path.exists(final_directory):
+                os.makedirs(final_directory)
+            for item in self.response:
+                print(self.download(item,dir=final_directory))
+            exit()
+
             
-            # Dumping output to a file; invoked with --dump   
-            if args.dump:
-                self.dump()
-            elif args.download:
-                current_directory = os.getcwd()
-                final_directory = os.path.join(current_directory, "wanted_list")
-                if not os.path.exists(final_directory):
-                    os.makedirs(final_directory)
-                for item in self.response:
-                    print(self.download(item,dir=final_directory))
-                exit()
 
     # Getting information of a wanted person, given their uid/ID            
     def wanted_person(self):
         print(f"\n{white}{self.response['title']}{reset}")
         for attr in self.attrs:
             print(f'{white}├─ {self.attr_dict[attr]}: {green}{self.response[attr]}{reset}')
+        #printing file_name for finding image or pdf
+        file_name = re.sub(r"http.+/([^/]+)/.+.pdf",r'\1',self.response['files'][0]['url'])
+        print(f'{blue}├─ FileName: {file_name}{reset}')
         
+        # storing images seperately
+        if args.images:
+            print(self.images(self.response))
         # Dumping output to a file; invoked with --dump
         # Or downloading casefile; invoked with --download
         if args.dump:
@@ -128,6 +145,9 @@ class Fbi:
                     file.write(f"{self.response['title']}\n")
                     for attr in self.attrs:
                         file.write(f'├─ {self.attr_dict[attr]}: {self.response[attr]}\n')
+                    #printing file_name for finding image or pdf
+                    file_name = re.sub(r"http.+/([^/]+)/.+.pdf",r'\1',response['files'][0]['url'])
+                    file.write(f'├─ FileName: {file_name}')
                     file.close()
                                 
             else:
@@ -136,6 +156,10 @@ class Fbi:
                         file.write(f"\n\n{item['title']}\n")
                         for attr in self.attrs:
                             file.write(f'├─ {self.attr_dict[attr]}: {item[attr]}\n')
+                        file_name = re.sub(r"http.+/([^/]+)/.+.pdf",r'\1',item['files'][0]['url'])
+                        file.write(f'├─ FileName: {file_name}')
+                        # records seperator
+                        file.write(f'\n\n{"*"*100}\n')
                     file.close()
                     exit()
         elif 'pdf' in args.dump.lower():
@@ -168,6 +192,38 @@ class Fbi:
                     file.write(chunk)
             
             return f"{white}[{green}✓{white}] File saved to {file_name}.pdf{reset}"
+    
+    # Download images for each person in a seperate folder
+    def images(self, response):
+        # creating directory
+        current_directory = os.getcwd()
+        final_directory = os.path.join(current_directory, "wanted_images")
+        if not os.path.exists(final_directory):
+            os.makedirs(final_directory)
+        
+        # extracting name from pdf download file because there aren't any pattern in image url
+        file_name = re.sub(r"http.+/([^/]+)/.+.pdf",r'\1',response['files'][0]['url'])
+        for count, img in enumerate(response['images']):
+            print("testing images: ",count, img['original'])
+            uri = requests.get(img['original'], stream=True)
+            
+            if 'png' in img['original']:
+                file_type = 'png'
+            elif 'jpg' in img['original']:
+                file_type = 'jpg'
+            else:
+                file_type = 'jpeg'
+
+            # fetching image caption
+            caption = img['caption'] if img['caption'] != None else 'None'
+            with open(final_directory+'/'+file_name+"-"+str(count)+'___Caption '+caption+'.'+file_type, 'wb') as file:
+                 # Getting at least 1MB chunk size (if possible) for the file per iteration
+                # And saving it to the opened file
+                for chunk in tqdm(uri.iter_content(chunk_size=1024),desc=f"{white}[{green}~{white}] Downloading {file_name}.{file_type}{reset}"):
+                    if chunk:
+                        file.write(chunk)
+                
+        return f"{white}[{green}✓{white}] Images saved with the name {file_name}-<number>__<caption>{reset}"
 
     # Open and read the LICENSE file     
     def licence_license(self):
@@ -194,6 +250,7 @@ parser.add_argument('--dump',help='dump output to a file',metavar='<path/to/file
 parser.add_argument('--wanted',help='return a list of the top wanted persons\' dossiers',action='store_true')
 parser.add_argument('--records',help='number of records to fetch with --wanted, DEFAULT = 10 records',dest='records',metavar='<number>')
 parser.add_argument('--wanted-person',help='return a dossier of a single wanted person; provide person\'s ID#',dest='wanted_person',metavar='<ID#>')
+parser.add_argument('--images',help='download images seperately in a folder. FileName Format: name+number+caption',action='store_true')
 parser.add_argument('--download',help='download persons\' casefile (beta)',action='store_true')
 parser.add_argument('--verbose',help='enable verbosity',action='store_true')
 parser.add_argument('--version',version='v1.0.0-caesar',action='version')
