@@ -1,0 +1,3 @@
+fbi_api==1.2.0
+Requests==2.30.0
+tqdm==4.65.0
