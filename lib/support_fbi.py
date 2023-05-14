@@ -225,7 +225,6 @@ class Fbi:
         # extracting name from pdf download file because there aren't any pattern in image url
         file_name = re.sub(r"http.+/([^/]+)/.+.pdf",r'\1',response['files'][0]['url'])
         for count, img in enumerate(response['images']):
-            print("testing images: ",count, img['original'])
             uri = requests.get(img['original'], stream=True)
             
             if 'png' in img['original']:
