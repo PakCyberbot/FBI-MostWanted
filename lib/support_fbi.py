@@ -12,7 +12,11 @@ from lib.colors import red,white,green,reset
 class Fbi:
     def __init__(self,args):
         if args.wanted:
-        	self.response = fbi.wanted(page_size=10, page=1, sort_order="asc")
+            if args.records:
+                self.response = fbi.wanted(page_size=args.records, page=1, sort_order="asc")
+            else:
+                self.response = fbi.wanted(page_size=10, page=1, sort_order="asc")
+
         elif args.wanted_person:
         	self.response = fbi.wanted_person(person_id=args.wanted_person)
         
@@ -93,7 +97,14 @@ class Fbi:
             # Dumping output to a file; invoked with --dump   
             if args.dump:
                 self.dump()
-    
+            elif args.download:
+                current_directory = os.getcwd()
+                final_directory = os.path.join(current_directory, "wanted_list")
+                if not os.path.exists(final_directory):
+                    os.makedirs(final_directory)
+                for item in self.response:
+                    print(self.download(item,dir=final_directory))
+                exit()
 
     # Getting information of a wanted person, given their uid/ID            
     def wanted_person(self):
@@ -126,6 +137,7 @@ class Fbi:
                         for attr in self.attrs:
                             file.write(f'├─ {self.attr_dict[attr]}: {item[attr]}\n')
                     file.close()
+                    exit()
         elif 'pdf' in args.dump.lower():
             if args.wanted_person:
                 print(self.download(self.response))
@@ -136,6 +148,7 @@ class Fbi:
                     os.makedirs(final_directory)
                 for item in self.response:
                     print(self.download(item,dir=final_directory))
+                exit()
 
         if args.verbose:
             print(f'\n{white}[{green}✓{white}] Output dumped to {args.dump}{reset}')
@@ -146,7 +159,6 @@ class Fbi:
         uri = requests.get(response['files'][0]['url'], stream=True)
         # name extraction from URL to avoid file naming errors
         file_name = re.sub(r"http.+/([^/]+)/.+.pdf",r'\1',response['files'][0]['url'])
-        print("tester 123 : ", dir, " file ", file_name)
 
         with open(dir+'/'+file_name+'.pdf', 'wb') as file:
             # Getting at least 1MB chunk size (if possible) for the file per iteration
@@ -154,9 +166,8 @@ class Fbi:
             for chunk in tqdm(uri.iter_content(chunk_size=1024),desc=f"{white}[{green}~{white}] Downloading {file_name}.pdf{reset}"):
                 if chunk:
                     file.write(chunk)
-                    
-            if args.verbose:
-            	return f"{white}[{green}✓{white}] File saved to {file_name}.pdf{reset}"
+            
+            return f"{white}[{green}✓{white}] File saved to {file_name}.pdf{reset}"
 
     # Open and read the LICENSE file     
     def licence_license(self):
@@ -181,6 +192,7 @@ start_time = datetime.now()
 parser = argparse.ArgumentParser(description=f'{white}FBI Wanted Persons Program CLI{reset}',epilog=f'{white}Gets lists and dossiers of top wanted persons and unidentified victims from the FBI Wanted Persons Program. Developed by {green}Richard Mwewa{white} | https://about.me/{green}rly0nheart{reset}')
 parser.add_argument('--dump',help='dump output to a file',metavar='<path/to/file>')
 parser.add_argument('--wanted',help='return a list of the top wanted persons\' dossiers',action='store_true')
+parser.add_argument('--records',help='number of records to fetch with --wanted, DEFAULT = 10 records',dest='records',metavar='<number>')
 parser.add_argument('--wanted-person',help='return a dossier of a single wanted person; provide person\'s ID#',dest='wanted_person',metavar='<ID#>')
 parser.add_argument('--download',help='download persons\' casefile (beta)',action='store_true')
 parser.add_argument('--verbose',help='enable verbosity',action='store_true')
