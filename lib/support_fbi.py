@@ -202,10 +202,20 @@ class Fbi:
                 for item in self.response:
                     print(self.download(item,dir=final_directory))
                 exit()
+        elif 'html' in args.dump.lower():
+            if args.wanted_person:
+                with open(args.dump, 'w', encoding='utf-8') as file:
+                    file.write(consoleRec.export_html())
+                    file.close()
+                                
+            else:
+                with open(args.dump, 'a', encoding='utf-8') as file:
+                    for item in self.response:
+                        file.write(consoleRec.export_html())
+                    file.close()
+                    exit()
         else:
             if args.wanted_person:
-                table=self.table_view(self.attr_dict,self.response)
-                table_str = console.render_str(table)
                 with open(args.dump, 'w', encoding='utf-8') as file:
                     
                     file.write(consoleRec.export_text())
