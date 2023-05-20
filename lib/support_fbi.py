@@ -7,7 +7,7 @@ import logging
 from datetime import datetime
 import os
 from lib.updater import updateNow
-
+from git import Repo
 # Setting up rich library
 from rich.console import Console
 from rich.table import Table
@@ -302,13 +302,23 @@ class Fbi:
             response.raise_for_status()
             latest_version = response.json()["tag_name"]
             if latest_version != VERSION:
+
                 print(f"[i] An update is available: {latest_version}")
+
                 # BUG FIXED : The update now works correctly even if the file location is different from the execution start point.
-                parent_dir = os.path.abspath(os.path.join(__file__, "..", ".."))
-                updateNow(parent_dir)
+                program_path = os.path.abspath(os.path.join(__file__, "..", ".."))
+
+                if not os.path.isdir(program_path):
+                    os.mkdir(program_path)
+                    Repo.clone_from(appRepo, program_path)
+                else:
+                    repo = Repo(program_path)
+                    repo.remotes.origin.pull()
+                console.print(f"[green]Updated Successfully![/green]")
                 exit()
             else:
                 print(f"[i] You are already using the latest version.")
+
         except requests.exceptions.RequestException as e:
             print(f"[X] Failed to check for updates: {str(e)}")
 
