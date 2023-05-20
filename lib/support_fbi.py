@@ -7,7 +7,10 @@ import logging
 from datetime import datetime
 import os
 from lib.colors import red,white,green,reset,blue
+from lib.updater import updateNow
 
+VERSION="v2.1.0"
+API_URL = "https://api.github.com/repos/PakCyberbot/FBI-MostWanted/releases/latest"
 
 class Fbi:
     def __init__(self,args):
@@ -84,6 +87,9 @@ class Fbi:
         	print(self.licence_license())
         elif args.author:
         	self.author()
+        elif args.update:
+            self.check_for_update()
+            exit()
         else:
             exit(f'{white}use{green} -h{white}/{green}--help{white} to show help message.{reset}')
     
@@ -250,6 +256,22 @@ class Fbi:
             return False
         else:
             return True
+
+    def check_for_update(self):
+        
+        try:
+            response = requests.get(API_URL)
+            response.raise_for_status()
+            latest_version = response.json()["tag_name"]
+            if latest_version != VERSION:
+                print(f"{white}[{green}i{white}] An update is available: {latest_version}{reset}")
+                updateNow()
+                exit()
+            else:
+                print(f"{white}[{green}i{white}] You are already using the latest version.{reset}")
+        except requests.exceptions.RequestException as e:
+            print(f"{white}[{red}X{white}] Failed to check for updates: {str(e)}{reset}")
+
     
     # Open and read the LICENSE file     
     def licence_license(self):
@@ -280,7 +302,8 @@ parser.add_argument('--images','-i',help='download images seperately in a folder
 parser.add_argument('--download','-g',help='download persons\' casefile (beta)',action='store_true')
 parser.add_argument('--reward','-r',help='Filter out records that contain a reward',action='store_true')
 parser.add_argument('--verbose','-v',help='enable verbosity',action='store_true')
-parser.add_argument('--version',version='v1.2.0-caesar',action='version')
+parser.add_argument('--update','-u',help='enable verbosity',action='store_true')
+parser.add_argument('--version',version=f'{VERSION}',action='version')
 parser.add_argument('--author','-a',help='show author\'s information and exit',action='store_true')
 parser.add_argument('--licence','--license',help='show program\'s licen[cs]e and exit',action='store_true')
 
