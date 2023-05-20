@@ -1,8 +1,3 @@
-
-# import fbi      # Credits @rly0nheart GitHub 
-
-# import argparse
-
 #!/usr/bin/env python3
 import argparse
 from lib.support_fbi import *

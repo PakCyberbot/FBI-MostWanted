@@ -6,7 +6,6 @@ from tqdm import tqdm
 import logging
 from datetime import datetime
 import os
-from lib.updater import updateNow
 from git import Repo
 import subprocess
 
