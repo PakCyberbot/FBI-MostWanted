@@ -6,10 +6,24 @@ from tqdm import tqdm
 import logging
 from datetime import datetime
 import os
-from lib.colors import red,white,green,reset,blue
 from lib.updater import updateNow
 
-VERSION="v2.1.1"
+# Setting up rich library
+from rich.console import Console
+from rich.table import Table
+from rich.theme import Theme
+from rich.style import Style
+from rich_argparse import RichHelpFormatter
+custom_theme = Theme({
+    "info": "dim cyan",
+    "warning": "magenta",
+    "danger": "bold red"
+})
+console = Console(theme=custom_theme)
+# this console for saving to file
+consoleSave = Console(record=True)
+
+VERSION="v3.0.0"
 API_URL = "https://api.github.com/repos/PakCyberbot/FBI-MostWanted/releases/latest"
 
 class Fbi:
@@ -79,7 +93,7 @@ class Fbi:
 
     # Main conditions    	                         
     def on_connection(self):
-        print(f'VERSION: {green}{VERSION}{reset}')
+        console.print(f'VERSION: [bold]{VERSION}[bold]',style="info" )
         if args.wanted:
             self.wanted()
         elif args.wanted_person:
@@ -92,24 +106,53 @@ class Fbi:
             self.check_for_update()
             exit()
         else:
-            exit(f'{white}use{green} -h{white}/{green}--help{white} to show help message.{reset}')
-    
+            console.print(f'use [info]-h/--help[/info] to show help message.')
+            console.print(f'Don\'t forget to follow me on: https://github.com/PakCyberbot')
+            exit()
+
+    # Reusable code to show the records/entries in a table format
+    def table_view(self, property_dict, item, Count=0):
+        if Count==0:
+            table = Table(title=f"[bold]Record[/bold]")
+        else:
+            table = Table(title=f"[bold]Record# {Count}[/bold]")
+        table.add_column("Name", style="blue", no_wrap=True)
+        table.add_column(f"{item['title']}")
+        for attr in self.attrs:
+            # Different colors on different properties
+            if property_dict[attr] =='Reward' and item[attr] != None:
+                table.add_row(f"{property_dict[attr]}",f"[green]{item[attr]}[/green]")                
+            elif property_dict[attr] =='Warning!' and item[attr] != None:
+                table.add_row(f"[red]{property_dict[attr]}[/red]",f"[red]{item[attr]}[/red]")
+            elif property_dict[attr] == 'Sex':
+                if item[attr] == "Female":
+                    table.add_row(f"{property_dict[attr]}",f"[plum1]{item[attr]}[/plum1]")
+                elif item[attr] == "Male":
+                    table.add_row(f"{property_dict[attr]}",f"[bright_cyan]{item[attr]}[/bright_cyan]")
+            else:    
+                table.add_row(f"{property_dict[attr]}",f"{item[attr]}")
+            
+                    
+        #printing file_name for finding image or pdf
+        file_name = re.sub(r"http.+/([^/]+)/.+.pdf",r'\1',item['files'][0]['url'])
+        table.add_row(f"[red]FileName[/red]",f"[green]{file_name}[/green]")
+        return table
+
     # Getting list and information of top wanted persons        
     def wanted(self):
+        count=0
+        
         for item in self.response:
             # reward filter
             if args.reward:
                 if not self.reward(item):
                     continue
-            print(f"\n{white}{item['title']}{reset}")
-            for attr in self.attrs:
-                print(f'{white}├─ {self.attr_dict[attr]}: {green}{item[attr]}{reset}')
-            #printing file_name for finding image or pdf
-            file_name = re.sub(r"http.+/([^/]+)/.+.pdf",r'\1',item['files'][0]['url'])
-            print(f'{blue}├─ FileName: {file_name}{reset}')
+            count += 1 
+            consoleSave.print(self.table_view(self.attr_dict,item,Count=count))
             # records seperator
-            print(f'\n\n{"*"*100}\n')
-
+            consoleSave.print(f'\n\n{"*"*100}\n', justify="center")
+        
+        
         # Storing images seperately
         if args.images:
             for item in self.response:
@@ -133,15 +176,11 @@ class Fbi:
         # reward filter
         if args.reward:
             if not self.reward(response):
-                print(f"{white}[{green}X{white}] No reward Here{reset}")
+                print(f"[X] No reward Here")
                 return None
-        print(f"\n{white}{self.response['title']}{reset}")
-        for attr in self.attrs:
-            print(f'{white}├─ {self.attr_dict[attr]}: {green}{self.response[attr]}{reset}')
-        #printing file_name for finding image or pdf
-        file_name = re.sub(r"http.+/([^/]+)/.+.pdf",r'\1',self.response['files'][0]['url'])
-        print(f'{blue}├─ FileName: {file_name}{reset}')
         
+        consoleSave.print(self.table_view(self.attr_dict,self.response))
+
         # storing images seperately
         if args.images:
             print(self.images(self.response))
@@ -153,7 +192,7 @@ class Fbi:
             print(self.download(self.response))
 
     # Dump output to a specified file      
-    # supports downloading data in text and PDF
+    # supports downloading data in text, HTML and PDF
     def dump(self):
         if 'pdf' in args.dump.lower():
             if args.wanted_person:
@@ -166,36 +205,34 @@ class Fbi:
                 for item in self.response:
                     print(self.download(item,dir=final_directory))
                 exit()
-        else:
+        elif 'html' in args.dump.lower():
             if args.wanted_person:
                 with open(args.dump, 'w', encoding='utf-8') as file:
-                    file.write(f"{self.response['title']}\n")
-                    for attr in self.attrs:
-                        file.write(f'├─ {self.attr_dict[attr]}: {self.response[attr]}\n')
-                    #printing file_name for finding image or pdf
-                    file_name = re.sub(r"http.+/([^/]+)/.+.pdf",r'\1',response['files'][0]['url'])
-                    file.write(f'├─ FileName: {file_name}')
+                    file.write(consoleSave.export_html())
                     file.close()
                                 
             else:
                 with open(args.dump, 'a', encoding='utf-8') as file:
                     for item in self.response:
-                         # reward filter
-                        if args.reward:
-                            if not self.reward(item):
-                                continue
-                        file.write(f"\n\n{item['title']}\n")
-                        for attr in self.attrs:
-                            file.write(f'├─ {self.attr_dict[attr]}: {item[attr]}\n')
-                        file_name = re.sub(r"http.+/([^/]+)/.+.pdf",r'\1',item['files'][0]['url'])
-                        file.write(f'├─ FileName: {file_name}')
-                        # records seperator
-                        file.write(f'\n\n{"*"*100}\n')
+                        file.write(consoleSave.export_html())
+                    file.close()
+                    exit()
+        else:
+            if args.wanted_person:
+                with open(args.dump, 'w', encoding='utf-8') as file:
+                    
+                    file.write(consoleSave.export_text())
+                    file.close()
+                                
+            else:
+                with open(args.dump, 'a', encoding='utf-8') as file:
+                    for item in self.response:
+                        file.write(consoleSave.export_text())
                     file.close()
                     exit()
 
         if args.verbose:
-            print(f'\n{white}[{green}✓{white}] Output dumped to {args.dump}{reset}')
+            print(f'\n[✓] Output dumped to {args.dump}')
             exit()
         
     # Download casefile of a wanted person                              
@@ -203,7 +240,7 @@ class Fbi:
         # reward filter
         if args.reward:
             if not self.reward(response):
-                return f"{white}[{green}X{white}] No reward Here{reset}"
+                return f"[X] No reward Here"
         uri = requests.get(response['files'][0]['url'], stream=True)
         # name extraction from URL to avoid file naming errors
         file_name = re.sub(r"http.+/([^/]+)/.+.pdf",r'\1',response['files'][0]['url'])
@@ -211,18 +248,18 @@ class Fbi:
         with open(dir+'/'+file_name+'.pdf', 'wb') as file:
             # Getting at least 1MB chunk size (if possible) for the file per iteration
             # And saving it to the opened file
-            for chunk in tqdm(uri.iter_content(chunk_size=1024),desc=f"{white}[{green}~{white}] Downloading {file_name}.pdf{reset}"):
+            for chunk in tqdm(uri.iter_content(chunk_size=1024),desc=f"[~] Downloading {file_name}.pdf"):
                 if chunk:
                     file.write(chunk)
             
-            return f"{white}[{green}✓{white}] File saved to {file_name}.pdf{reset}"
+            return f"[✓] File saved to {file_name}.pdf"
     
     # Download images for each person in a seperate folder
     def images(self, response):
         # reward filter
         if args.reward:
             if not self.reward(response):
-                return f"{white}[{green}X{white}] No reward Here{reset}"
+                return f"[X] No reward Here"
         # creating directory
         current_directory = os.getcwd()
         final_directory = os.path.join(current_directory, "wanted_images")
@@ -246,18 +283,18 @@ class Fbi:
             with open(final_directory+'/'+file_name+"-"+str(count)+'___Caption '+caption+'.'+file_type, 'wb') as file:
                  # Getting at least 1MB chunk size (if possible) for the file per iteration
                 # And saving it to the opened file
-                for chunk in tqdm(uri.iter_content(chunk_size=1024),desc=f"{white}[{green}~{white}] Downloading {file_name}.{file_type}{reset}"):
+                for chunk in tqdm(uri.iter_content(chunk_size=1024),desc=f"[~] Downloading {file_name}.{file_type}"):
                     if chunk:
                         file.write(chunk)
                 
-        return f"{white}[{green}✓{white}] Images saved with the name {file_name}-<number>__<caption>{reset}"
+        return f"[✓] Images saved with the name {file_name}-<number>__<caption>"
 
     def reward(self, item):
         if item['reward_text'] == None:
             return False
         else:
             return True
-
+    # Checks for updates using git api and then pull the latest version
     def check_for_update(self):
         
         try:
@@ -265,15 +302,15 @@ class Fbi:
             response.raise_for_status()
             latest_version = response.json()["tag_name"]
             if latest_version != VERSION:
-                print(f"{white}[{green}i{white}] An update is available: {latest_version}{reset}")
+                print(f"[i] An update is available: {latest_version}")
                 # BUG FIXED : The update now works correctly even if the file location is different from the execution start point.
                 parent_dir = os.path.abspath(os.path.join(__file__, "..", ".."))
                 updateNow(parent_dir)
                 exit()
             else:
-                print(f"{white}[{green}i{white}] You are already using the latest version.{reset}")
+                print(f"[i] You are already using the latest version.")
         except requests.exceptions.RequestException as e:
-            print(f"{white}[{red}X{white}] Failed to check for updates: {str(e)}{reset}")
+            print(f"[X] Failed to check for updates: {str(e)}")
 
     
     # Open and read the LICENSE file     
@@ -285,19 +322,19 @@ class Fbi:
             
     # Author info        
     def author(self):
-        print(f'{white}Richard Mwewa (Ritchie){reset}')
+        print(f'Richard Mwewa (Ritchie)')
         for key,value in self.author_dict.items():
-            print(f'{white}├─ {key}: {green}{value}{reset}') 
+            print(f'├─ {key}: {value}') 
 
-        print(f'{white}\nPakCyberbot (Contributer){reset}')
+        print(f'\nPakCyberbot (Contributer)')
         for key,value in self.contibuter.items():
-            print(f'{white}├─ {key}: {green}{value}{reset}')
+            print(f'├─ {key}: {value}')
 
 
 start_time = datetime.now()
 # Parsing command line arguments                                                                        
-parser = argparse.ArgumentParser(description=f'{white}FBI Wanted Persons Program CLI{reset}',epilog=f'{white}Gets lists and dossiers of top wanted persons and unidentified victims from the FBI Wanted Persons Program. Developed by {green}Richard Mwewa{white} | https://about.me/{green}rly0nheart{reset}')
-parser.add_argument('--dump','-d',help='dump output to a specified file, behaves differently for pdf',metavar='<path/to/file>')
+parser = argparse.ArgumentParser(description=f'FBI Wanted Persons Program CLI',epilog=f'Gets lists and dossiers of top wanted persons and unidentified victims from the FBI Wanted Persons Program. Developed by Richard Mwewa & Improved by PakCyberbot',formatter_class=RichHelpFormatter)
+parser.add_argument('--dump','-d',help='dump output to a specified file, behaves differently for pdf & html',metavar='<path/to/file>')
 parser.add_argument('--wanted','-w',help='return a list of the top wanted persons\' dossiers',action='store_true')
 parser.add_argument('--records','-e',help='number of records to fetch with --wanted, DEFAULT = 10 records',dest='records',metavar='<number>')
 parser.add_argument('--wanted-person','-p',help='return a dossier of a single wanted person; provide person\'s ID#',dest='wanted_person',metavar='<ID#>')
@@ -314,4 +351,4 @@ args = parser.parse_args()
 
 # if --verbose is passed, logging will run in debug mode
 if args.verbose:
-    logging.basicConfig(format=f"{white}[{green}~{white}] %(message)s{reset}",level=logging.DEBUG)
+    logging.basicConfig(format=f"[~] %(message)s",level=logging.DEBUG)
