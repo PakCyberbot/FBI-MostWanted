@@ -8,6 +8,8 @@ from datetime import datetime
 import os
 from lib.updater import updateNow
 from git import Repo
+import subprocess
+
 # Setting up rich library
 from rich.console import Console
 from rich.table import Table
@@ -313,6 +315,7 @@ class Fbi:
                     Repo.clone_from(appRepo, program_path)
                 else:
                     repo = Repo(program_path)
+                    subprocess.run(['git', 'reset', '--hard', 'HEAD'], cwd=program_path)
                     repo.remotes.origin.pull()
                 console.print(f"[green]Updated Successfully![/green]")
                 exit()
