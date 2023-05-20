@@ -302,7 +302,7 @@ parser.add_argument('--images','-i',help='download images seperately in a folder
 parser.add_argument('--download','-g',help='download persons\' casefile (beta)',action='store_true')
 parser.add_argument('--reward','-r',help='Filter out records that contain a reward',action='store_true')
 parser.add_argument('--verbose','-v',help='enable verbosity',action='store_true')
-parser.add_argument('--update','-u',help='enable verbosity',action='store_true')
+parser.add_argument('--update','-u',help='Update to the latest version',action='store_true')
 parser.add_argument('--version',version=f'{VERSION}',action='version')
 parser.add_argument('--author','-a',help='show author\'s information and exit',action='store_true')
 parser.add_argument('--licence','--license',help='show program\'s licen[cs]e and exit',action='store_true')

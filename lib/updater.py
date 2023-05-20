@@ -268,83 +268,6 @@ def backupConfigNow():
     except Exception as e:
         exList(e)
 
-def updateUpdaterNow(source):
-    updaterRepoGit = str("https://github.com/jkelol111/updater.py.git")
-    updaterAppID = str("me.jkelol111.updater")
-    tmpBackupDirWin2 = str("C:/Users/"+username+"/.tmp_updater")
-    tmpBackupDirNix2 = str("/home/"+username+"/.tmp_updater")
-    tmpBackupDirOSX2 = str("/Users/"+username+"/.tmp_updater")
-    if source == None:
-        try:
-            logger("updateupdater", "begin")
-            if isfile(updaterFile) == bool(True):
-                remove(updaterFile)
-            if system() == "Windows":
-                updaterUpdatedDirWin = str(tmpBackupDirWin2+"/"+updaterAppID)
-                if isdir(updaterUpdatedDirWin) == bool(True):
-                    rmtree(updaterUpdatedDirWin, onerror=onerrorPatch)
-                mkdir(updaterUpdatedDirWin)
-                Repo.clone_from(updaterRepoGit, updaterUpdatedDirWin)
-                updaterUpdatedFileWin = str(updaterUpdatedDirWin+"/updater.py")
-                copy2(updaterUpdatedFileWin, appDir)
-            elif system() == "Linux":
-                updaterUpdatedDirNix = str(tmpBackupDirNix2+"/"+updaterAppID)
-                if isdir(updaterUpdatedDirNix) == bool(True):
-                    rmtree(updaterUpdatedDirNix)
-                mkdir(updaterUpdatedDirNix)
-                Repo.clone_from(updaterRepoGit, updaterUpdatedDirNix)
-                updaterUpdatedFileNix = str(updaterUpdatedDirNix+"/updater.py")
-                copy2(updaterUpdatedFileNix, appDir)
-            elif system() == "Darwin":
-                updaterUpdatedDirOSX = str(tmpBackupDirOSX2+"/"+updaterAppID)
-                if isdir(updaterUpdatedDirOSX) == bool(True):
-                    rmtree(updaterUpdatedDirOSX)
-                mkdir(updaterUpdatedDirOSX)
-                Repo.clone_from(updaterRepoGit, updaterUpdatedDirOSX)
-                updaterUpdatedFileOSX = str(updaterUpdatedDirOSX+"/updater.py")
-                copy2(updaterUpdatedFileOSX, appDir)
-            else:
-                logger("notSupported", "")
-            logger("updateupdater", "done")          
-        except Exception as e:
-            logger("updateupdater", "error")
-            exList(e)
-    else:
-        try:
-            logger("updateupdater", "begin")
-            if isfile(updaterFile) == bool(True):
-                remove(updaterFile)
-            if system() == "Windows":
-                updaterUpdatedDirWin = str(tmpBackupDirWin2+"/"+updaterAppID)
-                if isdir(updaterUpdatedDirWin) == bool(True):
-                    rmtree(updaterUpdatedDirWin, onerror=onerrorPatch)
-                mkdir(updaterUpdatedDirWin)
-                copy2(source, updaterUpdatedDirWin)
-                updaterUpdatedFileWin = str(updaterUpdatedDirWin+"/updater.py")
-                copy2(updaterUpdatedFileWin, appDir)
-            elif system() == "Linux":
-                updaterUpdatedDirNix = str(tmpBackupDirNix2+"/"+updaterAppID)
-                if isdir(updaterUpdatedDirNix) == bool(True):
-                    rmtree(updaterUpdatedDirNix)
-                mkdir(updaterUpdatedDirNix)
-                copy2(source, updaterUpdatedDirNix)
-                updaterUpdatedFileNix = str(updaterUpdatedDirNix+"/updater.py")
-                copy2(updaterUpdatedFileNix, appDir)
-            elif system() == "Darwin":
-                updaterUpdatedDirOSX = str(tmpBackupDirOSX2+"/"+updaterAppID)
-                if isdir(updaterUpdatedDirOSX) == bool(True):
-                    rmtree(updaterUpdatedDirOSX)
-                mkdir(updaterUpdatedDirOSX)
-                copy2(source, updaterUpdatedDirOSX)
-                updaterUpdatedFileOSX = str(updaterUpdatedDirOSX+"/updater.py")
-                copy2(updaterUpdatedFileOSX, appDir)
-            else:
-                logger("notSupported", "")
-            logger("updateupdater", "done")          
-        except Exception as e:
-            logger("updateupdater", "error")
-            exList(e)
-
 
 def updateNow(updaterSource=None):
     checkConfig()
@@ -369,12 +292,6 @@ def updateNow(updaterSource=None):
             if backupOn == bool(True):
                 logger("update", "step2.5")
                 restoreConfigNow()
-
-            logger("update", "step3")
-            if not updaterSource == None:
-                updateUpdaterNow(updaterSource)
-            else:
-                updateUpdaterNow(None)
 
             if createLaunchScriptOn == bool(True):
                 createLauncherNow()
