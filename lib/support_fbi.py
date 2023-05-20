@@ -79,6 +79,7 @@ class Fbi:
 
     # Main conditions    	                         
     def on_connection(self):
+        print(f'VERSION: {green}{VERSION}{reset}')
         if args.wanted:
             self.wanted()
         elif args.wanted_person:

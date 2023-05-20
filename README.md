@@ -23,16 +23,17 @@ $ pip install -r requirements.txt
 # Optional Arguments
 | Option       | Metavar | Usage |
 | -------------|:---------:|:---------:|
-| <code>--dump</code>| *path/to/file <txt/pdf>* |  *dump output to a specified file, behaves differently for pdf*  |
-| <code>--wanted</code>| |  *return dossiers of the current wanted persons*  |
-| <code>--records</code>| *number* |  *number of records to fetch with --wanted, DEFAULT=10*  |
-| <code>--wanted-person</code>| *ID#* |  *return a dossier of a wanted person*  |
-| <code>--images</code>| |  *download images seperately in a folder. FileName Format: ***name+number+caption****  |
-| <code>--download</code>| |  *download a person's casefile (beta) (only works with --wanted-person)*  |
-| <code>--reward</code>| | *Filter out records that contain a reward*  |
-| <code>--verbose</code>| | *enable verbosity*  |
+| <code>--dump/-d</code>| *path/to/file <txt/pdf>* |  *dump output to a specified file, behaves differently for pdf*  |
+| <code>--wanted/-w</code>| |  *return dossiers of the current wanted persons*  |
+| <code>--records/-e</code>| *number* |  *number of records to fetch with --wanted, DEFAULT=10*  |
+| <code>--wanted-person/-p</code>| *ID#* |  *return a dossier of a wanted person*  |
+| <code>--images/-i</code>| |  *download images seperately in a folder. FileName Format: ***name+number+caption****  |
+| <code>--download/-g</code>| |  *download a person's casefile (beta) (only works with --wanted-person)*  |
+| <code>--reward/-r</code>| | *Filter out records that contain a reward*  |
+| <code>--verbose/-v</code>| | *enable verbosity*  |
+| <code>--update/-u</code>| | *Update to the latest version*  |
 | <code>--version</code>| |  *show program's version number and exit*  |
-| <code>--author</code>| |  *show author's information and exit*  |
+| <code>--author/-a</code>| |  *show author's information and exit*  |
 | <code>--licence/--license</code>| |  *show program's licen[cs]e and exit*  |
 
 # Improvements
