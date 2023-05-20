@@ -7,6 +7,7 @@ import logging
 from datetime import datetime
 import os
 from lib.updater import updateNow
+
 # Setting up rich library
 from rich.console import Console
 from rich.table import Table
@@ -18,12 +19,11 @@ custom_theme = Theme({
     "warning": "magenta",
     "danger": "bold red"
 })
-danger_style = Style(color="red", blink=True, bold=True)
 console = Console(theme=custom_theme)
 # this console for saving to file
-consoleRec = Console(record=True)
+consoleSave = Console(record=True)
 
-VERSION="v2.1.1"
+VERSION="v3.0.0"
 API_URL = "https://api.github.com/repos/PakCyberbot/FBI-MostWanted/releases/latest"
 
 class Fbi:
@@ -107,7 +107,10 @@ class Fbi:
             exit()
         else:
             console.print(f'use [info]-h/--help[/info] to show help message.')
+            console.print(f'Don\'t forget to follow me on: https://github.com/PakCyberbot')
             exit()
+
+    # Reusable code to show the records/entries in a table format
     def table_view(self, property_dict, item, Count=0):
         if Count==0:
             table = Table(title=f"[bold]Record[/bold]")
@@ -145,9 +148,9 @@ class Fbi:
                 if not self.reward(item):
                     continue
             count += 1 
-            consoleRec.print(self.table_view(self.attr_dict,item,Count=count))
+            consoleSave.print(self.table_view(self.attr_dict,item,Count=count))
             # records seperator
-            consoleRec.print(f'\n\n{"*"*100}\n', justify="center")
+            consoleSave.print(f'\n\n{"*"*100}\n', justify="center")
         
         
         # Storing images seperately
@@ -176,7 +179,7 @@ class Fbi:
                 print(f"[X] No reward Here")
                 return None
         
-        consoleRec.print(self.table_view(self.attr_dict,self.response))
+        consoleSave.print(self.table_view(self.attr_dict,self.response))
 
         # storing images seperately
         if args.images:
@@ -189,7 +192,7 @@ class Fbi:
             print(self.download(self.response))
 
     # Dump output to a specified file      
-    # supports downloading data in text and PDF
+    # supports downloading data in text, HTML and PDF
     def dump(self):
         if 'pdf' in args.dump.lower():
             if args.wanted_person:
@@ -205,26 +208,26 @@ class Fbi:
         elif 'html' in args.dump.lower():
             if args.wanted_person:
                 with open(args.dump, 'w', encoding='utf-8') as file:
-                    file.write(consoleRec.export_html())
+                    file.write(consoleSave.export_html())
                     file.close()
                                 
             else:
                 with open(args.dump, 'a', encoding='utf-8') as file:
                     for item in self.response:
-                        file.write(consoleRec.export_html())
+                        file.write(consoleSave.export_html())
                     file.close()
                     exit()
         else:
             if args.wanted_person:
                 with open(args.dump, 'w', encoding='utf-8') as file:
                     
-                    file.write(consoleRec.export_text())
+                    file.write(consoleSave.export_text())
                     file.close()
                                 
             else:
                 with open(args.dump, 'a', encoding='utf-8') as file:
                     for item in self.response:
-                        file.write(consoleRec.export_text())
+                        file.write(consoleSave.export_text())
                     file.close()
                     exit()
 
@@ -291,7 +294,7 @@ class Fbi:
             return False
         else:
             return True
-
+    # Checks for updates using git api and then pull the latest version
     def check_for_update(self):
         
         try:
@@ -331,7 +334,7 @@ class Fbi:
 start_time = datetime.now()
 # Parsing command line arguments                                                                        
 parser = argparse.ArgumentParser(description=f'FBI Wanted Persons Program CLI',epilog=f'Gets lists and dossiers of top wanted persons and unidentified victims from the FBI Wanted Persons Program. Developed by Richard Mwewa & Improved by PakCyberbot',formatter_class=RichHelpFormatter)
-parser.add_argument('--dump','-d',help='dump output to a specified file, behaves differently for pdf',metavar='<path/to/file>')
+parser.add_argument('--dump','-d',help='dump output to a specified file, behaves differently for pdf & html',metavar='<path/to/file>')
 parser.add_argument('--wanted','-w',help='return a list of the top wanted persons\' dossiers',action='store_true')
 parser.add_argument('--records','-e',help='number of records to fetch with --wanted, DEFAULT = 10 records',dest='records',metavar='<number>')
 parser.add_argument('--wanted-person','-p',help='return a dossier of a single wanted person; provide person\'s ID#',dest='wanted_person',metavar='<ID#>')
