@@ -109,19 +109,38 @@ class Fbi:
     
     # Getting list and information of top wanted persons        
     def wanted(self):
+        count=0
         for item in self.response:
             # reward filter
             if args.reward:
                 if not self.reward(item):
                     continue
-            print(f"\n{item['title']}")
+            count += 1 
+            table = Table(title=f"[bold]Record# {count}[/bold]")
+            table.add_column("Name", style="blue", no_wrap=True)
+            table.add_column(f"{item['title']}")
             for attr in self.attrs:
-                print(f'├─ {self.attr_dict[attr]}: {item[attr]}')
+                # Different colors on different properties
+                if self.attr_dict[attr] =='Reward' and item[attr] != None:
+                    table.add_row(f"{self.attr_dict[attr]}",f"[green]{item[attr]}[/green]")                
+                elif self.attr_dict[attr] =='Warning!' and item[attr] != None:
+                    table.add_row(f"[red]{self.attr_dict[attr]}[/red]",f"[red]{item[attr]}[/red]")
+                elif self.attr_dict[attr] == 'Sex':
+                    if item[attr] == "Female":
+                        table.add_row(f"{self.attr_dict[attr]}",f"[plum1]{item[attr]}[/plum1]")
+                    elif item[attr] == "Male":
+                        table.add_row(f"{self.attr_dict[attr]}",f"[bright_cyan]{item[attr]}[/bright_cyan]")
+                else:    
+                    table.add_row(f"{self.attr_dict[attr]}",f"{item[attr]}")
+                
+                        
+
             #printing file_name for finding image or pdf
             file_name = re.sub(r"http.+/([^/]+)/.+.pdf",r'\1',item['files'][0]['url'])
-            print(f'├─ FileName: {file_name}')
+            table.add_row(f"[red]FileName[/red]",f"[green]{file_name}[/green]")
+            console.print(table)            
             # records seperator
-            print(f'\n\n{"*"*100}\n')
+            console.print(f'\n\n{"*"*100}\n', justify="center")
 
         # Storing images seperately
         if args.images:
@@ -324,8 +343,6 @@ parser.add_argument('--author','-a',help='show author\'s information and exit',a
 parser.add_argument('--licence','--license',help='show program\'s licen[cs]e and exit',action='store_true')
 
 args = parser.parse_args()
-
-console.print(parser.format_help(), style="bold blue")
 
 # if --verbose is passed, logging will run in debug mode
 if args.verbose:
