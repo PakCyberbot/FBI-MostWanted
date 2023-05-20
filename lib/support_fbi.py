@@ -20,6 +20,8 @@ custom_theme = Theme({
 })
 danger_style = Style(color="red", blink=True, bold=True)
 console = Console(theme=custom_theme)
+# this console for saving to file
+consoleRec = Console(record=True)
 
 VERSION="v2.1.1"
 API_URL = "https://api.github.com/repos/PakCyberbot/FBI-MostWanted/releases/latest"
@@ -106,42 +108,48 @@ class Fbi:
         else:
             console.print(f'use [info]-h/--help[/info] to show help message.')
             exit()
-    
+    def table_view(self, property_dict, item, Count=0):
+        if Count==0:
+            table = Table(title=f"[bold]Record[/bold]")
+        else:
+            table = Table(title=f"[bold]Record# {Count}[/bold]")
+        table.add_column("Name", style="blue", no_wrap=True)
+        table.add_column(f"{item['title']}")
+        for attr in self.attrs:
+            # Different colors on different properties
+            if property_dict[attr] =='Reward' and item[attr] != None:
+                table.add_row(f"{property_dict[attr]}",f"[green]{item[attr]}[/green]")                
+            elif property_dict[attr] =='Warning!' and item[attr] != None:
+                table.add_row(f"[red]{property_dict[attr]}[/red]",f"[red]{item[attr]}[/red]")
+            elif property_dict[attr] == 'Sex':
+                if item[attr] == "Female":
+                    table.add_row(f"{property_dict[attr]}",f"[plum1]{item[attr]}[/plum1]")
+                elif item[attr] == "Male":
+                    table.add_row(f"{property_dict[attr]}",f"[bright_cyan]{item[attr]}[/bright_cyan]")
+            else:    
+                table.add_row(f"{property_dict[attr]}",f"{item[attr]}")
+            
+                    
+        #printing file_name for finding image or pdf
+        file_name = re.sub(r"http.+/([^/]+)/.+.pdf",r'\1',item['files'][0]['url'])
+        table.add_row(f"[red]FileName[/red]",f"[green]{file_name}[/green]")
+        return table
+
     # Getting list and information of top wanted persons        
     def wanted(self):
         count=0
+        
         for item in self.response:
             # reward filter
             if args.reward:
                 if not self.reward(item):
                     continue
             count += 1 
-            table = Table(title=f"[bold]Record# {count}[/bold]")
-            table.add_column("Name", style="blue", no_wrap=True)
-            table.add_column(f"{item['title']}")
-            for attr in self.attrs:
-                # Different colors on different properties
-                if self.attr_dict[attr] =='Reward' and item[attr] != None:
-                    table.add_row(f"{self.attr_dict[attr]}",f"[green]{item[attr]}[/green]")                
-                elif self.attr_dict[attr] =='Warning!' and item[attr] != None:
-                    table.add_row(f"[red]{self.attr_dict[attr]}[/red]",f"[red]{item[attr]}[/red]")
-                elif self.attr_dict[attr] == 'Sex':
-                    if item[attr] == "Female":
-                        table.add_row(f"{self.attr_dict[attr]}",f"[plum1]{item[attr]}[/plum1]")
-                    elif item[attr] == "Male":
-                        table.add_row(f"{self.attr_dict[attr]}",f"[bright_cyan]{item[attr]}[/bright_cyan]")
-                else:    
-                    table.add_row(f"{self.attr_dict[attr]}",f"{item[attr]}")
-                
-                        
-
-            #printing file_name for finding image or pdf
-            file_name = re.sub(r"http.+/([^/]+)/.+.pdf",r'\1',item['files'][0]['url'])
-            table.add_row(f"[red]FileName[/red]",f"[green]{file_name}[/green]")
-            console.print(table)            
+            consoleRec.print(self.table_view(self.attr_dict,item,Count=count))
             # records seperator
-            console.print(f'\n\n{"*"*100}\n', justify="center")
-
+            consoleRec.print(f'\n\n{"*"*100}\n', justify="center")
+        
+        
         # Storing images seperately
         if args.images:
             for item in self.response:
@@ -167,13 +175,9 @@ class Fbi:
             if not self.reward(response):
                 print(f"[X] No reward Here")
                 return None
-        print(f"\n{self.response['title']}")
-        for attr in self.attrs:
-            print(f'├─ {self.attr_dict[attr]}: {self.response[attr]}')
-        #printing file_name for finding image or pdf
-        file_name = re.sub(r"http.+/([^/]+)/.+.pdf",r'\1',self.response['files'][0]['url'])
-        print(f'├─ FileName: {file_name}')
         
+        consoleRec.print(self.table_view(self.attr_dict,self.response))
+
         # storing images seperately
         if args.images:
             print(self.images(self.response))
@@ -200,29 +204,17 @@ class Fbi:
                 exit()
         else:
             if args.wanted_person:
+                table=self.table_view(self.attr_dict,self.response)
+                table_str = console.render_str(table)
                 with open(args.dump, 'w', encoding='utf-8') as file:
-                    file.write(f"{self.response['title']}\n")
-                    for attr in self.attrs:
-                        file.write(f'├─ {self.attr_dict[attr]}: {self.response[attr]}\n')
-                    #printing file_name for finding image or pdf
-                    file_name = re.sub(r"http.+/([^/]+)/.+.pdf",r'\1',response['files'][0]['url'])
-                    file.write(f'├─ FileName: {file_name}')
+                    
+                    file.write(consoleRec.export_text())
                     file.close()
                                 
             else:
                 with open(args.dump, 'a', encoding='utf-8') as file:
                     for item in self.response:
-                         # reward filter
-                        if args.reward:
-                            if not self.reward(item):
-                                continue
-                        file.write(f"\n\n{item['title']}\n")
-                        for attr in self.attrs:
-                            file.write(f'├─ {self.attr_dict[attr]}: {item[attr]}\n')
-                        file_name = re.sub(r"http.+/([^/]+)/.+.pdf",r'\1',item['files'][0]['url'])
-                        file.write(f'├─ FileName: {file_name}')
-                        # records seperator
-                        file.write(f'\n\n{"*"*100}\n')
+                        file.write(consoleRec.export_text())
                     file.close()
                     exit()
 
