@@ -9,7 +9,7 @@ import os
 from lib.colors import red,white,green,reset,blue
 from lib.updater import updateNow
 
-VERSION="v2.1.0"
+VERSION="v2.1.1"
 API_URL = "https://api.github.com/repos/PakCyberbot/FBI-MostWanted/releases/latest"
 
 class Fbi:
@@ -266,7 +266,9 @@ class Fbi:
             latest_version = response.json()["tag_name"]
             if latest_version != VERSION:
                 print(f"{white}[{green}i{white}] An update is available: {latest_version}{reset}")
-                updateNow()
+                # BUG FIXED : The update now works correctly even if the file location is different from the execution start point.
+                parent_dir = os.path.abspath(os.path.join(__file__, "..", ".."))
+                updateNow(parent_dir)
                 exit()
             else:
                 print(f"{white}[{green}i{white}] You are already using the latest version.{reset}")

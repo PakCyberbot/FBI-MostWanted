@@ -269,7 +269,7 @@ def backupConfigNow():
         exList(e)
 
 
-def updateNow(updaterSource=None):
+def updateNow(program_path):
     checkConfig()
     if configured == bool(False):
         logger("notConfigured", "")
@@ -282,12 +282,12 @@ def updateNow(updaterSource=None):
             if backupOn == bool(True):
                 logger("update", "step1.5")
                 backupConfigNow()
-            rmtree(appDir, onerror=onerrorPatch)
+            rmtree(program_path, onerror=onerrorPatch)
 
             logger("update", "step2")
-            if not isdir(appDir):
-                mkdir(appDir)
-            Repo.clone_from(appRepo, appDir)
+            if not isdir(program_path):
+                mkdir(program_path)
+            Repo.clone_from(appRepo, program_path)
 
             if backupOn == bool(True):
                 logger("update", "step2.5")
