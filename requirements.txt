@@ -1,3 +1,10 @@
+config==0.5.1
 fbi_api==1.2.0
+GitPython==3.1.31
+GitPython==3.1.31
+PyYAML==6.0
+PyYAML==6.0
 Requests==2.30.0
+rich==13.3.5
+rich_argparse==1.1.0
 tqdm==4.65.0
