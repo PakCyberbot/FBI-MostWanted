@@ -30,6 +30,7 @@ $ pip install -r requirements.txt
 | <code>--wanted-person/-p</code>| *ID#* |  *return a dossier of a wanted person*  |
 | <code>--images/-i</code>| |  *download images seperately in a folder. FileName Format: ***name+number+caption****  |
 | <code>--download/-g</code>| |  *download a single/multiple person's casefile (also works with --wanted)*  |
+| <code>--slow</code>| | *Downloads records slowly and mimics human traffic*  |
 | <code>--reward/-r</code>| | *Filter out records that contain a reward*  |
 | <code>--silent/-s</code>| | *disable output*  |
 | <code>--verbose/-v</code>| | *enable verbosity*  |
@@ -50,6 +51,7 @@ $ pip install -r requirements.txt
 * **Added Rich library for enhanced program interaction** 
 * Added support for **dumping files in HTML format** using the **--dump** option. Simply provide the desired filename with the **.html** extension.
 * Supports **multithreading** to speed the download process (v3.1.0)
+* The --slow option has been implemented to download at a slower pace, mimicking human traffic, in order to avoid being banned or flagged. (v3.1.0)
 
 # LICENSE
 ![license](https://user-images.githubusercontent.com/74001397/137917929-2f2cdb0c-4d1d-4e4b-9f0d-e01589e027b5.png)
