@@ -1,2 +1,0 @@
-{appDir: ., appExecName: fbi-wanted.py, appIdentifier: com.fbi.wanted, appRepo: 'https://github.com/PakCyberbot/FBI-MostWanted.git',
-  backupOn: false, createLaunchScriptOn: false}

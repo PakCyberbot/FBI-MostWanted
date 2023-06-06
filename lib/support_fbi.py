@@ -9,6 +9,9 @@ import os
 from git import Repo
 import subprocess
 
+# Support for MultiThreading
+from concurrent.futures import ThreadPoolExecutor
+
 # Setting up rich library
 from rich.console import Console
 from rich.table import Table
@@ -24,7 +27,7 @@ console = Console(theme=custom_theme)
 # this console for saving to file
 consoleSave = Console(record=True)
 
-VERSION="v3.0.0"
+VERSION="v3.1.0"
 API_URL = "https://api.github.com/repos/PakCyberbot/FBI-MostWanted/releases/latest"
 
 class Fbi:
@@ -141,23 +144,32 @@ class Fbi:
 
     # Getting list and information of top wanted persons        
     def wanted(self):
-        count=0
-        
-        for item in self.response:
-            # reward filter
-            if args.reward:
-                if not self.reward(item):
-                    continue
-            count += 1 
-            consoleSave.print(self.table_view(self.attr_dict,item,Count=count))
-            # records seperator
-            consoleSave.print(f'\n\n{"*"*100}\n', justify="center")
+        if not args.silent:
+            count=0
+            
+            for item in self.response:
+                # reward filter
+                if args.reward:
+                    if not self.reward(item):
+                        continue
+                count += 1 
+                consoleSave.print(self.table_view(self.attr_dict,item,Count=count))
+                # records seperator
+                consoleSave.print(f'\n\n{"*"*100}\n', justify="center")
         
         
         # Storing images seperately
         if args.images:
-            for item in self.response:
-                print(self.images(item))
+            # Multithreading implementation for downloading files   
+            with ThreadPoolExecutor() as executor:
+                img_results = executor.map(self.images, self.response)
+                for i in img_results:
+                    print(i)
+
+            # Code 4 single thread downloading
+            # for item in self.response:
+            #     print(self.images(item))
+
         # Dumping output to a file; invoked with --dump
         if args.dump:
             self.dump()
@@ -166,8 +178,17 @@ class Fbi:
             final_directory = os.path.join(current_directory, "wanted_list")
             if not os.path.exists(final_directory):
                 os.makedirs(final_directory)
-            for item in self.response:
-                print(self.download(item,dir=final_directory))
+
+            # Multithreading implementation for downloading files   
+            with ThreadPoolExecutor() as executor:
+                item_results = executor.map(self.download, self.response, (final_directory for i in range(0,len(self.response))))
+                for i in item_results:
+                    print(i)
+
+            # Code 4 single thread downloading
+            # for item in self.response:
+            #     print(self.download(item,dir=final_directory))
+
             exit()
 
             
@@ -180,7 +201,8 @@ class Fbi:
                 print(f"[X] No reward Here")
                 return None
         
-        consoleSave.print(self.table_view(self.attr_dict,self.response))
+        if not args.silent:
+            consoleSave.print(self.table_view(self.attr_dict,self.response))
 
         # storing images seperately
         if args.images:
@@ -353,6 +375,7 @@ parser.add_argument('--wanted-person','-p',help='return a dossier of a single wa
 parser.add_argument('--images','-i',help='download images seperately in a folder. FileName Format: name+number+caption',action='store_true')
 parser.add_argument('--download','-g',help='download persons\' casefile (beta)',action='store_true')
 parser.add_argument('--reward','-r',help='Filter out records that contain a reward',action='store_true')
+parser.add_argument('--silent','-s',help='Disable Output',action='store_true')
 parser.add_argument('--verbose','-v',help='enable verbosity',action='store_true')
 parser.add_argument('--update','-u',help='Update to the latest version',action='store_true')
 parser.add_argument('--version',version=f'{VERSION}',action='version')
